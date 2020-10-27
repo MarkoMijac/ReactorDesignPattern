@@ -8,12 +8,17 @@ namespace ReactorDesignPattern
 {
     public interface IReactor
     {
+        string Identifier { get; }
+        IReactiveNode GetNode(string member, object owner);
+        IReactiveNode GetNode(int identifier);
         void AddNode(IReactiveNode node);
         void RemoveNode(IReactiveNode node);
         void CreateDependency(IReactiveNode predecessor, IReactiveNode successor);
         void RemoveDependency(IReactiveNode predecessor, IReactiveNode successor);
         void PerformUpdate();
         void PerformUpdate(IReactiveNode initialNode);
-        void PerformUpdate(string member, object ownerObject);
+        event EventHandler UpdateStarted;
+        event EventHandler UpdateSuccessful;
+        event EventHandler UpdateFailed;
     }
 }

@@ -14,7 +14,7 @@ namespace Examples
         {
             if (_defaultReactor == null)
             {
-                _defaultReactor = new Reactor();
+                _defaultReactor = new Reactor("DefaultReactor");
             }
 
             return _defaultReactor;

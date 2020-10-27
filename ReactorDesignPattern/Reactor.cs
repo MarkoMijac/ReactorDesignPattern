@@ -9,7 +9,24 @@ namespace ReactorDesignPattern
 {
     public class Reactor : IReactor
     {
+        public string Identifier { get; private set; }
+
         private List<IReactiveNode> Nodes { get; set; } = new List<IReactiveNode>();
+
+        public Reactor(string identifier)
+        {
+            Identifier = identifier;
+        }
+
+        public IReactiveNode GetNode(string member, object owner)
+        {
+            return Nodes.FirstOrDefault(n => n.Member == member && n.OwnerObject == owner);
+        }
+
+        public IReactiveNode GetNode(int identifier)
+        {
+            return Nodes.FirstOrDefault(n => n.Identifier == identifier);
+        }
 
         public void AddNode(IReactiveNode node)
         {
@@ -22,11 +39,6 @@ namespace ReactorDesignPattern
         public void RemoveNode(IReactiveNode node)
         {
             Nodes.Remove(node);
-        }
-
-        public IReactiveNode GetNode(string member, object ownerObject)
-        {
-            return Nodes.FirstOrDefault(n => n.Member == member && n.OwnerObject == ownerObject);
         }
 
         public void CreateDependency(IReactiveNode predecessor, IReactiveNode successor)
@@ -59,19 +71,42 @@ namespace ReactorDesignPattern
 
         public void PerformUpdate()
         {
-            var sortedNodes = Sort(Nodes);
-            foreach (var node in sortedNodes)
+            try
             {
-                node.Update();
+                OnUpdateStarted();
+
+                var sortedNodes = Sort(Nodes);
+                foreach (var node in sortedNodes)
+                {
+                    node.Update();
+                }
+
+                OnUpdateSuccessful();
             }
+            catch (Exception)
+            {
+                OnUpdateFailed();
+            }
+            
         }
 
         public void PerformUpdate(IReactiveNode initialNode)
         {
-            var sortedNodes = Sort(Nodes, initialNode);
-            foreach (var node in sortedNodes)
+            try
             {
-                node.Update();
+                OnUpdateStarted();
+
+                var sortedNodes = Sort(Nodes, initialNode);
+                foreach (var node in sortedNodes)
+                {
+                    node.Update();
+                }
+
+                OnUpdateSuccessful();
+            }
+            catch (Exception)
+            {
+                OnUpdateFailed();
             }
         }
 
@@ -133,10 +168,29 @@ namespace ReactorDesignPattern
             }
         }
 
-        public void PerformUpdate(string member, object ownerObject)
+        #region Events
+
+        public event EventHandler UpdateStarted;
+
+        private void OnUpdateStarted()
         {
-            IReactiveNode initialNode = GetNode(member, ownerObject);
-            PerformUpdate(initialNode);
+            UpdateStarted?.Invoke(this, null);
         }
+
+        public event EventHandler UpdateSuccessful;
+
+        private void OnUpdateSuccessful()
+        {
+            UpdateSuccessful?.Invoke(this, null);
+        }
+
+        public event EventHandler UpdateFailed;
+
+        private void OnUpdateFailed()
+        {
+            UpdateFailed?.Invoke(this, null);
+        }
+
+        #endregion
     }
 }

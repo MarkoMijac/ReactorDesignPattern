@@ -21,7 +21,8 @@ namespace Examples
                 if (_height != value)
                 {
                     _height = value;
-                    ReactorManager.GetDefaultReactor().PerformUpdate(nameof(Height), this);
+                    var node = ReactorManager.GetDefaultReactor().GetNode(nameof(Height), this);
+                    ReactorManager.GetDefaultReactor().PerformUpdate(node);
                 }
             }
         }
@@ -35,7 +36,8 @@ namespace Examples
                 if (_width != value)
                 {
                     _width = value;
-                    ReactorManager.GetDefaultReactor().PerformUpdate(nameof(Height), this);
+                    var node = ReactorManager.GetDefaultReactor().GetNode(nameof(Width), this);
+                    ReactorManager.GetDefaultReactor().PerformUpdate(node);
                 }
             }
         }
