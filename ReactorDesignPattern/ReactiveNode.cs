@@ -8,23 +8,26 @@ namespace ReactorDesignPattern
 {
     public abstract class ReactiveNode : IReactiveNode
     {
-        public int Identifier { get; private set; }
+        public uint Identifier { get; private set; }
         public string Member { get; private set; }
-        public object OwnerObject { get; private set; }
+        public object Owner { get; private set; }
         public List<IReactiveNode> Predecessors { get; private set; } = new List<IReactiveNode>();
         public List<IReactiveNode> Successors { get; private set; } = new List<IReactiveNode>();
 
         public ReactiveNode(string member, object ownerObject)
         {
             Member = member;
-            OwnerObject = ownerObject;
+            Owner = ownerObject;
 
             GenerateIdentifier();
         }
 
         protected virtual void GenerateIdentifier()
         {
-            Identifier = GetHashCode();
+            if (Owner != null && Member != "")
+            {
+                Identifier = (uint)(Owner.GetHashCode() ^ Member.GetHashCode());
+            }
         }
 
         public abstract void Update();
@@ -59,14 +62,14 @@ namespace ReactorDesignPattern
         {
             return obj is ReactiveNode node &&
                    Member == node.Member &&
-                   EqualityComparer<object>.Default.Equals(OwnerObject, node.OwnerObject);
+                   EqualityComparer<object>.Default.Equals(Owner, node.Owner);
         }
 
         public override int GetHashCode()
         {
             int hashCode = 1536950782;
             hashCode = hashCode * -1521134295 + EqualityComparer<string>.Default.GetHashCode(Member);
-            hashCode = hashCode * -1521134295 + EqualityComparer<object>.Default.GetHashCode(OwnerObject);
+            hashCode = hashCode * -1521134295 + EqualityComparer<object>.Default.GetHashCode(Owner);
             return hashCode;
         }
     }

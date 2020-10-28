@@ -15,11 +15,11 @@ namespace ReactorDesignPattern
 
         public override void Update()
         {
-            Type type = OwnerObject.GetType();
+            Type type = Owner.GetType();
             MethodInfo method = type.GetMethod(Member);
             if (method != null)
             {
-                method.Invoke(OwnerObject, null);
+                method.Invoke(Owner, null);
             }
         }
     }

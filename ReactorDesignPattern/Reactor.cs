@@ -20,7 +20,7 @@ namespace ReactorDesignPattern
 
         public IReactiveNode GetNode(string member, object owner)
         {
-            return Nodes.FirstOrDefault(n => n.Member == member && n.OwnerObject == owner);
+            return Nodes.FirstOrDefault(n => n.Member == member && n.Owner == owner);
         }
 
         public IReactiveNode GetNode(int identifier)

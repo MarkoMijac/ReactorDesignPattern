@@ -11,9 +11,9 @@ namespace ReactorDesignPattern
         List<IReactiveNode> Predecessors { get; }
         List<IReactiveNode> Successors { get;}
 
-        int Identifier { get; }
+        uint Identifier { get; }
         string Member { get; }
-        object OwnerObject { get; }
+        object Owner { get; }
 
         void Update();
         void AddSuccessor(IReactiveNode node);
