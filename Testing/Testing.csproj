@@ -49,13 +49,21 @@
     <Reference Include="System.Core" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="UnitTest1.cs" />
+    <Compile Include="Fakes\AlfaMock.cs" />
+    <Compile Include="ReactorTests.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="ReactiveNodeTests.cs" />
+    <Compile Include="PropertyNodeTests.cs" />
+    <Compile Include="MethodNodeTests.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\DemonstrationExamples\DemonstrationExamples.csproj">
+      <Project>{08CAADBC-65E9-437B-926C-EE64C51DF391}</Project>
+      <Name>DemonstrationExamples</Name>
+    </ProjectReference>
     <ProjectReference Include="..\Examples\Examples.csproj">
       <Project>{e5e9c63d-6388-4f1b-9c86-d6f9c68c95ff}</Project>
       <Name>Examples</Name>

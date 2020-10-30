@@ -11,7 +11,9 @@ namespace ReactorDesignPattern
     {
         public string Identifier { get; private set; }
 
-        private List<IReactiveNode> Nodes { get; set; } = new List<IReactiveNode>();
+        public List<IReactiveNode> Nodes { get; private set; } = new List<IReactiveNode>();
+
+        public List<IReactiveNode> LastUpdateLog;
 
         public Reactor(string identifier)
         {
@@ -30,6 +32,11 @@ namespace ReactorDesignPattern
 
         public void AddNode(IReactiveNode node)
         {
+            if (node == null)
+            {
+                throw new ArgumentException("Cannot add null node!");
+            }
+
             if (Nodes.Contains(node) == false)
             {
                 Nodes.Add(node);
@@ -43,20 +50,37 @@ namespace ReactorDesignPattern
 
         public void CreateDependency(IReactiveNode predecessor, IReactiveNode successor)
         {
-            if (predecessor != null && successor != null)
+            ValidateDependency(predecessor, successor);
+
+            if (Nodes.Contains(predecessor) == false)
             {
-                if (Nodes.Contains(predecessor) == false)
-                {
-                    Nodes.Add(predecessor);
-                }
+                Nodes.Add(predecessor);
+            }
 
-                if (Nodes.Contains(successor) == false)
-                {
-                    Nodes.Add(successor);
-                }
+            if (Nodes.Contains(successor) == false)
+            {
+                Nodes.Add(successor);
+            }
 
-                predecessor.AddSuccessor(successor);
-                successor.AddPredecessor(predecessor);
+            predecessor.AddSuccessor(successor);
+            successor.AddPredecessor(predecessor);
+        }
+
+        private void ValidateDependency(IReactiveNode predecessor, IReactiveNode successor)
+        {
+            if (predecessor == null)
+            {
+                throw new ArgumentException("Predecessor node cannot be null!");
+            }
+
+            if (successor == null)
+            {
+                throw new ArgumentException("Successor node cannot be null!");
+            }
+
+            if (predecessor == successor)
+            {
+                throw new ArgumentException("Predecessor and successor cannot be the node!");
             }
         }
 
@@ -76,10 +100,7 @@ namespace ReactorDesignPattern
                 OnUpdateStarted();
 
                 var sortedNodes = Sort(Nodes);
-                foreach (var node in sortedNodes)
-                {
-                    node.Update();
-                }
+                UpdateNodes(sortedNodes);
 
                 OnUpdateSuccessful();
             }
@@ -87,7 +108,16 @@ namespace ReactorDesignPattern
             {
                 OnUpdateFailed();
             }
-            
+        }
+
+        private void UpdateNodes(List<IReactiveNode> sortedNodes)
+        {
+            foreach (var node in sortedNodes)
+            {
+                node.Update();
+            }
+
+            LastUpdateLog = sortedNodes.ToList();
         }
 
         public void PerformUpdate(IReactiveNode initialNode)
@@ -97,10 +127,7 @@ namespace ReactorDesignPattern
                 OnUpdateStarted();
 
                 var sortedNodes = Sort(Nodes, initialNode);
-                foreach (var node in sortedNodes)
-                {
-                    node.Update();
-                }
+                UpdateNodes(sortedNodes);
 
                 OnUpdateSuccessful();
             }
