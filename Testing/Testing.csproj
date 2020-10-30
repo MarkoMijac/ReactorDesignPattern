@@ -49,6 +49,7 @@
     <Reference Include="System.Core" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Fakes\AlfaException.cs" />
     <Compile Include="Fakes\AlfaMock.cs" />
     <Compile Include="ReactorTests.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

@@ -11,13 +11,14 @@ namespace ReactorDesignPattern
     {
         public string Identifier { get; private set; }
 
-        public List<IReactiveNode> Nodes { get; private set; } = new List<IReactiveNode>();
+        public List<IReactiveNode> Nodes { get; private set; }
 
         public List<IReactiveNode> LastUpdateLog;
 
         public Reactor(string identifier)
         {
             Identifier = identifier;
+            Nodes = new List<IReactiveNode>();
         }
 
         public IReactiveNode GetNode(string member, object owner)
@@ -159,7 +160,7 @@ namespace ReactorDesignPattern
             var sorted = new List<IReactiveNode>();
             var visited = new Dictionary<IReactiveNode, bool>();
 
-            if (unsortedNodes != null && unsortedNodes.Contains(initialNode))
+            if (unsortedNodes.Contains(initialNode))
             {
                 Visit(initialNode, visited, sorted);
             }

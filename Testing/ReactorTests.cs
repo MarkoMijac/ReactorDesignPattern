@@ -1,57 +1,31 @@
 ﻿using System;
+using System.Diagnostics;
 using DemonstrationExamples;
 using Examples;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using ReactorDesignPattern;
+using Testing.Fakes;
 
 namespace Testing
 {
     [TestClass]
     public class ReactorTests
     {
-        //[TestMethod]
-        public void TestMethod1()
+        #region Constructor
+
+        [TestMethod]
+        public void Constructor_GivenProvidedIdentifier_SavesIdentifier()
         {
-            IReactor r = ReactorManager.GetDefaultReactor();
+            //Arrange
 
-            ConstructionPart part = new ConstructionPart("CP1", 5, 2.5);
-            IReactiveNode widthNode = new PropertyNode(nameof(part.Width), part);
-            IReactiveNode heightNode = new PropertyNode(nameof(part.Height), part);
-            IReactiveNode surfaceAreaNode = new PropertyNode(nameof(part.SurfaceArea), part);
+            //Act
+            var reactor = new Reactor("R1");
 
-            r.CreateDependency(widthNode, surfaceAreaNode);
-            r.CreateDependency(heightNode, surfaceAreaNode);
-
-            r.PerformUpdate();
-
-            Assert.AreEqual(12.5, part.SurfaceArea);
+            //Assert
+            Assert.IsTrue(reactor.Identifier == "R1");
         }
 
-        //[TestMethod]
-        public void TestMethod2()
-        {
-            IReactor r = ReactorManager.GetDefaultReactor();
-
-            ConstructionPart part = new ConstructionPart("CP1", 5, 2.5);
-            IReactiveNode widthNode = new PropertyNode(nameof(part.Width), part);
-            IReactiveNode heightNode = new PropertyNode(nameof(part.Height), part);
-            IReactiveNode surfaceAreaNode = new PropertyNode(nameof(part.SurfaceArea), part);
-
-            r.CreateDependency(widthNode, surfaceAreaNode);
-            r.CreateDependency(heightNode, surfaceAreaNode);
-
-            r.PerformUpdate();
-
-            Assert.AreEqual(12.5, part.SurfaceArea);
-
-            part.Height = 3;
-
-            Assert.AreEqual(15, part.SurfaceArea);
-
-            part.Width = 6;
-
-            Assert.AreEqual(18, part.SurfaceArea);
-        }
+        #endregion
 
         #region GetNode
 
@@ -80,6 +54,22 @@ namespace Testing
 
             //Act
             var fetchedNode = reactor.GetNode(node.Identifier);
+
+            //Assert
+            Assert.IsNull(fetchedNode);
+        }
+
+        [TestMethod]
+        public void GetNode_GivenNoMatchingNode3_ReturnsNull()
+        {
+            //Arrange
+            var obj = new Alfa();
+            var node = new PropertyNode(nameof(obj.A), obj);
+            var reactor = new Reactor("R1");
+            reactor.AddNode(node);
+
+            //Act
+            var fetchedNode = reactor.GetNode(nameof(obj.B), obj);
 
             //Assert
             Assert.IsNull(fetchedNode);
@@ -318,7 +308,7 @@ namespace Testing
         }
 
         [TestMethod]
-        public void PerformUpdate_GivenNonEmptyGraph_ReturnsCorrectUpdateLog()
+        public void PerformUpdate_GivenCompleteUpdateRequested_PerformsCorrectUpdate()
         {
             //Arrange
             var alfa = new Alfa();
@@ -346,11 +336,25 @@ namespace Testing
             reactor.PerformUpdate();
 
             //Assert
-            Assert.IsTrue(reactor.LastUpdateLog.Count > 0);
+            var updateLog = reactor.LastUpdateLog;
+            int indexA = updateLog.IndexOf(nodeA);
+            int indexB = updateLog.IndexOf(nodeB);
+            int indexC = updateLog.IndexOf(nodeC);
+            int indexD = updateLog.IndexOf(nodeD);
+            int indexE = updateLog.IndexOf(nodeE);
+            int indexF = updateLog.IndexOf(nodeF);
+
+            Assert.IsTrue(updateLog.Count == 6);
+            Assert.IsTrue(indexF > indexB && indexF > indexD && indexF > indexE);
+            Assert.IsTrue(indexE > indexB && indexE > indexA);
+            Assert.IsTrue(indexB > indexA);
+            Assert.IsTrue(indexD > indexA && indexD > indexC);
         }
 
-        private IReactor CreateFilledReactor()
+        [TestMethod]
+        public void PerformUpdate_GivenPartialUpdateRequested_PerformsCorrectUpdate()
         {
+            //Arrange
             var alfa = new Alfa();
             var beta = new Beta(alfa);
             var gama = new Gama(alfa, beta);
@@ -372,9 +376,158 @@ namespace Testing
             reactor.CreateDependency(nodeD, nodeF);
             reactor.CreateDependency(nodeE, nodeF);
 
-            return reactor;
+            //Act
+            reactor.PerformUpdate(nodeC);
+
+            //Assert
+            var updateLog = reactor.LastUpdateLog;
+            int indexC = updateLog.IndexOf(nodeC);
+            int indexD = updateLog.IndexOf(nodeD);
+            int indexF = updateLog.IndexOf(nodeF);
+
+            Assert.IsTrue(updateLog.Count == 3);
+            Assert.IsTrue(indexF > indexD);
+            Assert.IsTrue(indexD > indexC);
         }
 
         #endregion
+
+        #region Events
+
+        [TestMethod]
+        public void GivenUpdateHasStarted_FiresUpdateStartedEvent()
+        {
+            //Arrange
+            bool eventFired = false;
+            var alfa = new Alfa();
+            var nodeA = new PropertyNode(nameof(alfa.A), alfa);
+            var nodeB = new PropertyNode(nameof(alfa.B), alfa);
+            var reactor = new Reactor("R1");
+            reactor.CreateDependency(nodeA, nodeB);
+            reactor.UpdateStarted += delegate
+            {
+                eventFired = true;
+            };
+
+            //Act
+            reactor.PerformUpdate();
+
+            //Assert
+            Assert.IsTrue(eventFired);
+        }
+
+        [TestMethod]
+        public void GivenUpdateIsSuccessful_FiresUpdateSuccessfulEvent()
+        {
+            //Arrange
+            bool eventFired = false;
+            var alfa = new Alfa();
+            var nodeA = new PropertyNode(nameof(alfa.A), alfa);
+            var nodeB = new PropertyNode(nameof(alfa.B), alfa);
+            var reactor = new Reactor("R1");
+            reactor.CreateDependency(nodeA, nodeB);
+            reactor.UpdateSuccessful += delegate
+            {
+                eventFired = true;
+            };
+
+            //Act
+            reactor.PerformUpdate();
+
+            //Assert
+            Assert.IsTrue(eventFired);
+        }
+
+        [TestMethod]
+        public void GivenUpdateFails_FiresUpdateFailedEvent()
+        {
+            //Arrange
+            bool eventFired = false;
+            var alfa = new AlfaException();
+            var nodeA = new PropertyNode(nameof(alfa.A), alfa);
+            var nodeB = new PropertyNode(nameof(alfa.B), alfa);
+            var reactor = new Reactor("R1");
+            reactor.CreateDependency(nodeA, nodeB);
+            reactor.UpdateFailed += delegate
+            {
+                eventFired = true;
+            };
+
+            //Act
+            reactor.PerformUpdate();
+
+            //Assert
+            Assert.IsTrue(eventFired);
+        }
+
+        [TestMethod]
+        public void GivenUpdateFails1_FiresUpdateFailedEvent()
+        {
+            //Arrange
+            bool eventFired = false;
+            var alfa = new AlfaException();
+            var nodeA = new PropertyNode(nameof(alfa.A), alfa);
+            var nodeB = new PropertyNode(nameof(alfa.B), alfa);
+            var reactor = new Reactor("R1");
+            reactor.CreateDependency(nodeA, nodeB);
+            reactor.UpdateFailed += delegate
+            {
+                eventFired = true;
+            };
+
+            //Act
+            reactor.PerformUpdate(nodeA);
+
+            //Assert
+            Assert.IsTrue(eventFired);
+        }
+
+        [TestMethod]
+        public void UpdateFailed_NoSubscribers_DoesntFireEvent()
+        {
+            //Arrange
+            bool eventFired = false;
+            var alfa = new AlfaException();
+            var nodeA = new PropertyNode(nameof(alfa.A), alfa);
+            var nodeB = new PropertyNode(nameof(alfa.B), alfa);
+            var reactor = new Reactor("R1");
+            reactor.CreateDependency(nodeA, nodeB);
+            //Act
+            reactor.PerformUpdate();
+
+            //Assert
+            Assert.IsFalse(eventFired);
+        }
+
+        [TestMethod]
+        public void GivenCyclicDependency_FiresUpdateFailedEvent()
+        {
+            //Arrange
+            bool eventFired = false;
+            var alfa = new Alfa();
+            var beta = new Beta(alfa);
+            var nodeA = new PropertyNode(nameof(alfa.A), alfa);
+            var nodeB = new PropertyNode(nameof(alfa.B), alfa);
+            var nodeD = new PropertyNode(nameof(beta.D), beta);
+
+            var reactor = new Reactor("R1");
+            reactor.CreateDependency(nodeA, nodeB);
+            reactor.CreateDependency(nodeB, nodeD);
+            reactor.CreateDependency(nodeD, nodeA);
+
+            reactor.UpdateFailed += delegate
+            {
+                eventFired = true;
+            };
+
+            //Act
+            reactor.PerformUpdate();
+
+            //Assert
+            Assert.IsTrue(eventFired);
+        }
+
+        #endregion
+
     }
 }
