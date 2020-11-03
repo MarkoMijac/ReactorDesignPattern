@@ -10,7 +10,18 @@ namespace ReactorDesignPattern
     {
         public int Identifier { get; private set; }
         public string Member { get; private set; }
-        public object Owner { get; private set; }
+        public object Owner 
+        {
+            get
+            {
+                if (_weakOwner == null || _weakOwner.IsAlive == false)
+                {
+                    return null;
+                }
+                return _weakOwner.Target;
+            }
+        }
+        private WeakReference _weakOwner;
         public List<IReactiveNode> Predecessors { get; private set; }
         public List<IReactiveNode> Successors { get; private set; }
 
@@ -19,7 +30,7 @@ namespace ReactorDesignPattern
             Validate(member, ownerObject);
 
             Member = member;
-            Owner = ownerObject;
+            _weakOwner = new WeakReference(ownerObject);
 
             GenerateIdentifier();
 
